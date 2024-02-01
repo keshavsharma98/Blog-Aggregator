@@ -34,9 +34,19 @@ func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error creating new feed: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot create a new feed: %v", err))
 		return
 	}
 
 	respondWithJSON(w, http.StatusCreated, dbFeedToFeed(feed))
+}
+
+func (apiCfg *apiConfig) handlerGetAllFeeds(w http.ResponseWriter, r *http.Request) {
+	feeds, err := apiCfg.DB.GetAllFeeds(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot get feeds: %v", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, dbFeedsToFeeds(feeds))
 }
