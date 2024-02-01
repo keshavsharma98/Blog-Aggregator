@@ -1,9 +1,47 @@
 # Makefile
+.PHONY: new-migration
+include .env
+export
+
 execute:
 	go run .
 
 build:
 	go build -o bin/execute.exe
 
+build-vendor:
+	go build -mod=vendor -o bin/execute.exe
+
 run: build
 	./bin/execute.exe
+
+all-db-up: 
+	cd sql/schema && goose postgres ${POSTGRES_URL} up
+
+all-db-down: 
+	cd sql/schema && goose postgres ${POSTGRES_URL} down
+
+mig:
+	@if [ "$$cmd" != "" ]; then \
+		cd sql/schema && goose postgres ${POSTGRES_URL} "$$cmd"; \
+	else \
+		read -p "Please enter a goose command arg's: " cmd; \
+		cd sql/schema && goose postgres ${POSTGRES_URL} "$$cmd"; \
+	fi;
+
+# Live Reload
+watch:
+	@if command -v air > /dev/null; then \
+	    air; \
+	    echo "Watching...";\
+	else \
+	    read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
+	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
+	        go install github.com/cosmtrek/air@latest; \
+	        air; \
+	        echo "Watching...";\
+	    else \
+	        echo "You chose not to install air. Exiting..."; \
+	        exit 1; \
+	    fi; \
+	fi

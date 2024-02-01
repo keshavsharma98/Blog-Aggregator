@@ -21,6 +21,7 @@
 # Go workspace file
 go.work
 
-*.json
-
 .env
+
+# Ignore vendor directory
+/vendor/
