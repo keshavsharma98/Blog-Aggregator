@@ -59,7 +59,8 @@ func main() {
 	v1_Router := chi.NewRouter()
 	chi_router.Get("/readiness", apiCfg.handleReadiness)
 	v1_Router.Post("/users", apiCfg.handleCreateUser)
-	v1_Router.Get("/users", apiCfg.handleGetUserByApiKey)
+	v1_Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handleGetUserByApiKey))
+	v1_Router.Post("/feed", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
 
 	chi_router.Mount("/v1", v1_Router)
 

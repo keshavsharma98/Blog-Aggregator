@@ -10,9 +10,11 @@ import (
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
 
-func (apiCfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+
 	type parameters struct {
 		Name string `json:"name"`
+		URL  string `json:"url"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -23,20 +25,18 @@ func (apiCfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
+	feed, err := apiCfg.DB.CreateFeed(r.Context(), database.CreateFeedParams{
 		ID:        uuid.New(),
 		Name:      params.Name,
+		Url:       params.URL,
+		UserID:    user.ID,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error creating new user: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error creating new feed: %v", err))
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, dbUserToUser(user))
-}
-
-func (apiCfg *apiConfig) handleGetUserByApiKey(w http.ResponseWriter, r *http.Request, user database.User) {
-	respondWithJSON(w, http.StatusCreated, dbUserToUser(user))
+	respondWithJSON(w, http.StatusCreated, dbFeedToFeed(feed))
 }
