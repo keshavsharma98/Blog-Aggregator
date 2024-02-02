@@ -32,7 +32,7 @@ func (apiCfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.
 		UpdatedAt: time.Now().UTC(),
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("followed create a new feed: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot create a new feed follow: %v", err))
 		return
 	}
 
@@ -43,13 +43,16 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.
 	q_param := chi.URLParam(r, "feedFollowID")
 	id, err := uuid.Parse(q_param)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error parsing request JSON: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error parsing feedFollowID: %v", err))
 		return
 	}
 
-	err = apiCfg.DB.DeleteFeedFollow(r.Context(), id)
+	err = apiCfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{
+		ID:     id,
+		UserID: user.ID,
+	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot unfollow the feed: %v", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot delete the feed follow: %v", err))
 		return
 	}
 
