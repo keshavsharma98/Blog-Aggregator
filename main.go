@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -17,13 +17,6 @@ import (
 
 type apiConfig struct {
 	DB *database.Queries
-}
-
-var n = 10
-
-var feedsUrls = []string{
-	"https://blog.boot.dev/index.xml",
-	"https://wagslane.dev/index.xml",
 }
 
 func main() {
@@ -76,6 +69,7 @@ func main() {
 	v1_Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
 	v1_Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 	v1_Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedsFollowedByUser))
+	v1_Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerPostsFollowedByUser))
 
 	chi_router.Mount("/v1", v1_Router)
 
@@ -84,30 +78,29 @@ func main() {
 		Handler: chi_router,
 	}
 
-	rssCrawler()
+	db := database.New(conn)
+	concurrency_s := os.Getenv("CONCURRENCY")
+	if concurrency_s == "" {
+		log.Panicln("concurrency number not found")
+	}
+
+	duration_s := os.Getenv("CONCURRENCY_WAIT")
+	if duration_s == "" {
+		log.Panicln("concurrency wait duration not found")
+	}
+	concurrency, err := strconv.Atoi(concurrency_s)
+	if err != nil {
+		log.Panicln("Error: ", err)
+	}
+	duration, err := time.ParseDuration(duration_s)
+	if err != nil {
+		log.Panicln("Error: ", err)
+	}
+
+	rssScraper(db, concurrency, duration)
 
 	log.Printf("Server is running on port %v\n", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
-}
-
-func rssCrawler() {
-	var wg sync.WaitGroup
-
-	for _, u := range feedsUrls {
-
-		wg.Add(1)
-
-		go func(u string) {
-			defer wg.Done()
-			j := 0
-			for {
-				j = Crawler(u, n, j)
-				j = j + n
-				time.Sleep(time.Second * 5)
-			}
-		}(u)
-	}
-	wg.Wait()
 }

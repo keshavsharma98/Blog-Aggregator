@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,6 +36,17 @@ type FeedFollow struct {
 type NewFeedToFeed struct {
 	Feed       Feed       `json:"feed"`
 	FeedFollow FeedFollow `json:"feed_follow"`
+}
+
+type Post struct {
+	ID          uuid.UUID      `json:"id"`
+	Title       string         `json:"title"`
+	Url         string         `json:"url"`
+	Description sql.NullString `json:"description"`
+	FeedID      uuid.UUID      `json:"feed_id"`
+	PublishedAt time.Time      `json:"published_at"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 func dbUserToUser(dbUser database.User) User {
@@ -98,4 +110,26 @@ func dbFeedsFollowToFeedsFollow(dbFeedsFollow []database.FeedFollow) []FeedFollo
 		feedsArr = append(feedsArr, f)
 	}
 	return feedsArr
+}
+
+func dbPostToPost(postsFollowed database.Post) Post {
+	return Post{
+		ID:          postsFollowed.ID,
+		Title:       postsFollowed.Title,
+		Url:         postsFollowed.Url,
+		Description: postsFollowed.Description,
+		FeedID:      postsFollowed.FeedID,
+		PublishedAt: postsFollowed.PublishedAt,
+		CreatedAt:   postsFollowed.CreatedAt,
+		UpdatedAt:   postsFollowed.UpdatedAt,
+	}
+}
+
+func dbPostsFollowedToPostsFollowed(postsFollowed []database.Post) []Post {
+	postsArr := make([]Post, 0, len(postsFollowed))
+	for _, pf := range postsFollowed {
+		p := dbPostToPost(pf)
+		postsArr = append(postsArr, p)
+	}
+	return postsArr
 }

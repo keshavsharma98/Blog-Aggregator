@@ -23,18 +23,18 @@ all-db-down:
 
 mig:
 	@if [ "$$cmd" != "" ]; then \
-		cd sql/schema && goose postgres ${POSTGRES_URL} "$$cmd"; \
+		cd sql/schema && goose postgres ${POSTGRES_URL} $$cmd; \
 	else \
 		read -p "Please enter a goose command arg's: " cmd; \
-		cd sql/schema && goose postgres ${POSTGRES_URL} "$$cmd"; \
+		cd sql/schema && goose postgres ${POSTGRES_URL} $$cmd; \
 	fi;
 
 mig-create:
 	@if [ "$$cmd" != "" ]; then \
-		cd sql/schema && goose create "$$cmd" sql; \
+		cd sql/schema && goose -s create "$$cmd" sql; \
 	else \
 		read -p "Please enter a file name: " cmd; \
-		cd sql/schema && goose create "$$cmd" sql; \
+		cd sql/schema && goose -s create "$$cmd" sql; \
 	fi;
 
 # Live Reload
