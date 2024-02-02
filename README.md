@@ -1,2 +1,2 @@
 # Blog-Aggregator
-An RSS feed aggregator in Go!
+RSS Aggregator is a backend server written in Go that aggregates multiple blog posts from multiple RSS feeds at. The server allows users to add different RSS feeds to its database and it will automatically collect all of the posts for those feeds at every defined interval, download them, and save them in the database for later viewing. A user can follow and unfollow any number of fields they want as per their requirements/choices.
