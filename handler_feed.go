@@ -38,7 +38,19 @@ func (apiCfg *apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, dbFeedToFeed(feed))
+	feedFollowed, err := apiCfg.DB.CreateFeedFollow(r.Context(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot create a new feed: %v", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, dbNewFeedToFeed(feed, feedFollowed))
 }
 
 func (apiCfg *apiConfig) handlerGetAllFeeds(w http.ResponseWriter, r *http.Request) {
@@ -48,5 +60,5 @@ func (apiCfg *apiConfig) handlerGetAllFeeds(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, dbFeedsToFeeds(feeds))
+	respondWithJSON(w, http.StatusFound, dbFeedsToFeeds(feeds))
 }
