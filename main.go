@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
@@ -15,6 +17,13 @@ import (
 
 type apiConfig struct {
 	DB *database.Queries
+}
+
+var n = 10
+
+var feedsUrls = []string{
+	"https://blog.boot.dev/index.xml",
+	"https://wagslane.dev/index.xml",
 }
 
 func main() {
@@ -38,6 +47,8 @@ func main() {
 	if err != nil {
 		log.Panicln("Error connecting to database ", err)
 	}
+
+	defer conn.Close()
 
 	queries := database.New(conn)
 
@@ -73,8 +84,30 @@ func main() {
 		Handler: chi_router,
 	}
 
+	rssCrawler()
+
 	log.Printf("Server is running on port %v\n", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
+}
+
+func rssCrawler() {
+	var wg sync.WaitGroup
+
+	for _, u := range feedsUrls {
+
+		wg.Add(1)
+
+		go func(u string) {
+			defer wg.Done()
+			j := 0
+			for {
+				j = Crawler(u, n, j)
+				j = j + n
+				time.Sleep(time.Second * 5)
+			}
+		}(u)
+	}
+	wg.Wait()
 }

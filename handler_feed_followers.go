@@ -56,7 +56,7 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, "")
+	respondWithJSON(w, http.StatusOK, struct{}{})
 }
 
 func (apiCfg *apiConfig) handlerGetFeedsFollowedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
