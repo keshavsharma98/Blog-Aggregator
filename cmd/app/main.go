@@ -14,9 +14,9 @@ import (
 	_ "github.com/keshavsharma98/Blog-Aggregator/docs"
 	"github.com/keshavsharma98/Blog-Aggregator/handler"
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
-	"github.com/keshavsharma98/Blog-Aggregator/internal/scrapper"
+	"github.com/keshavsharma98/Blog-Aggregator/pkg/scrapper"
 	_ "github.com/lib/pq"
-	"github.com/swaggo/http-swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Orders API
@@ -116,4 +116,26 @@ func scrappingOfFeeds(conn *sql.DB) {
 		scrapper.RssScraper(db, concurrency, duration)
 	}
 
+}
+
+func getV1Routes(apiCfg *handler.ApiConfig) *chi.Mux {
+	v1_Router := chi.NewRouter()
+
+	// users routes
+	v1_Router.Post("/users", apiCfg.HandleCreateUser)
+	v1_Router.Get("/users", apiCfg.MiddlewareAuth(apiCfg.HandleGetUserByApiKey))
+
+	//feeds routes
+	v1_Router.Post("/feed", apiCfg.MiddlewareAuth(apiCfg.HandlerCreateFeed))
+	v1_Router.Get("/feed", apiCfg.HandlerGetAllFeeds)
+
+	// feeds follow routes
+	v1_Router.Post("/feed_follows", apiCfg.MiddlewareAuth(apiCfg.HandlerCreateFeedFollow))
+	v1_Router.Delete("/feed_follows/{feedFollowID}", apiCfg.MiddlewareAuth(apiCfg.HandlerDeleteFeedFollow))
+	v1_Router.Get("/feed_follows", apiCfg.MiddlewareAuth(apiCfg.HandlerGetFeedsFollowedByUser))
+
+	//posts routes
+	v1_Router.Get("/posts", apiCfg.MiddlewareAuth(apiCfg.HandlerPostsFollowedByUser))
+
+	return v1_Router
 }

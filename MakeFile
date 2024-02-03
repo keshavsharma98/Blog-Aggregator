@@ -4,16 +4,20 @@ include .env
 export
 
 execute:
-	go run .
+	cd cmd/app && go run .
+
+mod:
+	go mod tidy
+	go mod vendor
 
 build:
-	go build -o bin/execute.exe
+	cd cmd/app && go build -o ../../bin/app.exe
 
 build-vendor:
-	go build -mod=vendor -o bin/execute.exe
+	cd cmd/app && go build -mod=vendor -o ../../bin/app.exe
 
 run: build
-	./bin/execute.exe
+	cd cmd/app && ../.././bin/app.exe
 
 all-db-up: 
 	cd sql/schema && goose postgres ${POSTGRES_URL} up
@@ -40,13 +44,13 @@ mig-create:
 # Live Reload
 watch:
 	@if command -v air > /dev/null; then \
-	    air; \
-	    echo "Watching...";\
+		cd cmd/app && air --build.cmd "go build -o ..\..\bin\app.exe main.go" --build.bin "..\..\bin\app.exe" -- -d; \
+	    echo "Watching..."; \
 	else \
 	    read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
 	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
 	        go install github.com/cosmtrek/air@latest; \
-	        air; \
+	        air -d --build.bin "./bin/api"; \
 	        echo "Watching...";\
 	    else \
 	        echo "You chose not to install air. Exiting..."; \
@@ -58,4 +62,6 @@ install_swagger:
 	go get -u github.com/swaggo/swag/cmd/swag
 	go get -u github.com/swaggo/http-swagger
 	go get -u github.com/alecthomas/template
+	@echo "Run command "swag init" to update the swagger doc everytime there is a change"
+
 	

@@ -1,8 +1,14 @@
 version: "2"
 sql:
-  - schema: "sql/schema"
-    queries: "sql/queries"
+  - schema: "internal/sql/schema"
+    queries: "internal/sql/queries"
     engine: "postgresql"
     gen:
       go:
         out: "internal/database"
+        overrides:
+          - column: "posts.description"
+            nullable: true
+            go_type:
+              type: "string"
+              pointer: true

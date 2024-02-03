@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,14 +45,14 @@ type NewFeed struct {
 	FeedFollow FeedFollow `json:"feed_follow"`
 }
 type Post struct {
-	ID          uuid.UUID      `json:"id"`
-	Title       string         `json:"title"`
-	Url         string         `json:"url"`
-	Description sql.NullString `json:"description"`
-	FeedID      uuid.UUID      `json:"feed_id"`
-	PublishedAt time.Time      `json:"published_at"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	ID          uuid.UUID `json:"id"`
+	Title       string    `json:"title"`
+	Url         string    `json:"url"`
+	Description *string   `json:"description"`
+	FeedID      uuid.UUID `json:"feed_id"`
+	PublishedAt time.Time `json:"published_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func dbUserToUser(dbUser database.User) User {

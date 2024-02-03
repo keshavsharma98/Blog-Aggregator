@@ -15,35 +15,12 @@ import (
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
 
-type RSSFeed struct {
-	XMLName xml.Name `xml:"rss"`
-	Text    string   `xml:",chardata"`
-	Version string   `xml:"version,attr"`
-	Atom    string   `xml:"atom,attr"`
-	Channel struct {
-		Text  string `xml:",chardata"`
-		Title string `xml:"title"`
-		Link  struct {
-			Text string `xml:",chardata"`
-			Href string `xml:"href,attr"`
-			Rel  string `xml:"rel,attr"`
-			Type string `xml:"type,attr"`
-		} `xml:"link"`
-		Description   string `xml:"description"`
-		Generator     string `xml:"generator"`
-		Language      string `xml:"language"`
-		LastBuildDate string `xml:"lastBuildDate"`
-		Item          []struct {
-			Text        string `xml:",chardata"`
-			Title       string `xml:"title"`
-			Link        string `xml:"link"`
-			PubDate     string `xml:"pubDate"`
-			Guid        string `xml:"guid"`
-			Description string `xml:"description"`
-		} `xml:"item"`
-	} `xml:"channel"`
-}
-
+// RssScraper performs RSS scraping from multiple feeds using GO ROUTINES and updates the provided database with the fetched data.
+//
+// Parameters:
+// - db: The database connection to use for storing the scraped data.
+// - concurrency: The number of concurrent goroutines to use during scraping.
+// - duration: The duration to wait between consecutive scrapes.
 func RssScraper(db *database.Queries, concurrency int, duration time.Duration) {
 	log.Printf("Started scraping on %v goroutines every %s duration \n", concurrency, duration)
 	ticker := time.NewTicker(duration)
@@ -87,11 +64,11 @@ func scrapFeed(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 	}
 
 	for _, f := range rssFeed.Channel.Item {
-		desc := sql.NullString{}
-		if f.Description != "" {
-			desc.String = f.Description
-			desc.Valid = true
-		}
+		// desc := sql.NullString{}
+		// if f.Description != "" {
+		// 	desc.String = f.Description
+		// 	desc.Valid = true
+		// }
 
 		pub_date, err := time.Parse(time.RFC1123Z, f.PubDate)
 		if err != nil {
@@ -103,7 +80,7 @@ func scrapFeed(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 			ID:          uuid.New(),
 			Title:       f.Title,
 			Url:         f.Link,
-			Description: desc,
+			Description: &f.Description,
 			PublishedAt: pub_date,
 			FeedID:      feed.ID,
 			CreatedAt:   time.Now().UTC(),
