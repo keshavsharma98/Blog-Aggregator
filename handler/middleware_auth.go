@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 type authHandler func(http.ResponseWriter, *http.Request, database.User)
 
-func (apiCfg *apiConfig) middlewareAuth(handler authHandler) http.HandlerFunc {
+func (apiCfg *ApiConfig) MiddlewareAuth(handler authHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		api_key, err := auth.GetApiKey(r.Header)
 		if err != nil {
@@ -20,7 +20,7 @@ func (apiCfg *apiConfig) middlewareAuth(handler authHandler) http.HandlerFunc {
 
 		user, err := apiCfg.DB.GetUserByApiKey(r.Context(), api_key)
 		if err != nil {
-			respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Canot find user: %v", err))
+			respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("Cannot find user: %v", err))
 			return
 		}
 

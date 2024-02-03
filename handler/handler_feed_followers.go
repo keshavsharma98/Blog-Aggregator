@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -11,13 +11,19 @@ import (
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
 
-func (apiCfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
-	type parameters struct {
-		FeedId uuid.UUID `json:"feed_id"`
-	}
-
+// handlerCreateFeedFollow creates a new feed follow.
+// @Summary Create a new feed follow
+// @Description Creates a new feed follow for the user
+// @ID create-feed-follow
+// @Accept json
+// @Produce json
+// @Param request body parametersCreateFeedFollow true "Feed follow parameters"
+// @Success 201 {object} FeedFollow
+// @Failure 400 {object} errorResponseBody
+// @Router /feed-follows [post]
+func (apiCfg *ApiConfig) HandlerCreateFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
+	params := parametersCreateFeedFollow{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error parsing request JSON: %v", err))
@@ -39,7 +45,15 @@ func (apiCfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.
 	respondWithJSON(w, http.StatusCreated, dbFeedFollowToFeedFollow(feedFollowed))
 }
 
-func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
+// handlerDeleteFeedFollow deletes a feed follow.
+// @Summary Delete a feed follow
+// @Description Deletes a feed follow for the user
+// @ID delete-feed-follow
+// @Param feedFollowID path string true "Feed follow ID"
+// @Success 200
+// @Failure 400 {object} errorResponseBody
+// @Router /feed-follows/{feedFollowID} [delete]
+func (apiCfg *ApiConfig) HandlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
 	q_param := chi.URLParam(r, "feedFollowID")
 	id, err := uuid.Parse(q_param)
 	if err != nil {
@@ -59,7 +73,15 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.
 	respondWithJSON(w, http.StatusOK, struct{}{})
 }
 
-func (apiCfg *apiConfig) handlerGetFeedsFollowedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
+// handlerGetFeedsFollowedByUser gets feeds followed by the user.
+// @Summary Get feeds followed by the user
+// @Description Retrieves a list of feeds followed by the user
+// @ID get-feeds-followed-by-user
+// @Produce json
+// @Success 200 {array} FeedFollow
+// @Failure 400 {object} errorResponseBody
+// @Router /feed-followed [get]
+func (apiCfg *ApiConfig) HandlerGetFeedsFollowedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	feedsFollowed, err := apiCfg.DB.GetFeedsFollowedByUser(r.Context(), user.ID)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("cannot find users followed feed: %v", err))

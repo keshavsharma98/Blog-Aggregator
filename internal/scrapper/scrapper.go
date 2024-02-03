@@ -1,4 +1,4 @@
-package main
+package scrapper
 
 import (
 	"context"
@@ -44,7 +44,7 @@ type RSSFeed struct {
 	} `xml:"channel"`
 }
 
-func rssScraper(db *database.Queries, concurrency int, duration time.Duration) {
+func RssScraper(db *database.Queries, concurrency int, duration time.Duration) {
 	log.Printf("Started scraping on %v goroutines every %s duration \n", concurrency, duration)
 	ticker := time.NewTicker(duration)
 	for ; ; <-ticker.C {

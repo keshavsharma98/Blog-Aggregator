@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"database/sql"
@@ -8,6 +8,8 @@ import (
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
 
+// UserResponse represents the structure of the response body for a user.
+// @Success 200 {object} User
 type User struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -16,6 +18,8 @@ type User struct {
 	ApiKey    string    `json:"api_key"`
 }
 
+// FeedResponse represents the structure of the response body for a feed.
+// @Success 200 {object} Feed
 type Feed struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -25,6 +29,8 @@ type Feed struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
+// FeedFollowResponse represents the structure of the response body for a feed follow.
+// @Success 200 {object} FeedFollow
 type FeedFollow struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
@@ -33,11 +39,12 @@ type FeedFollow struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type NewFeedToFeed struct {
+// NewFeedResponse represents the structure of the response body for a new feed to feed response.
+// @Success 200 {object} NewFeed
+type NewFeed struct {
 	Feed       Feed       `json:"feed"`
 	FeedFollow FeedFollow `json:"feed_follow"`
 }
-
 type Post struct {
 	ID          uuid.UUID      `json:"id"`
 	Title       string         `json:"title"`
@@ -70,8 +77,8 @@ func dbFeedToFeed(dbFeed database.Feed) Feed {
 	}
 }
 
-func dbNewFeedToFeed(dbFeed database.Feed, dbFeedFollowed database.FeedFollow) NewFeedToFeed {
-	return NewFeedToFeed{
+func dbNewFeedToFeed(dbFeed database.Feed, dbFeedFollowed database.FeedFollow) NewFeed {
+	return NewFeed{
 		Feed: Feed{
 			ID:        dbFeed.ID,
 			Name:      dbFeed.Name,

@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -8,7 +8,16 @@ import (
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
 
-func (apiCfg *apiConfig) handlerPostsFollowedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
+// handlerPostsFollowedByUser gets posts followed by the user.
+// @Summary Get posts followed by the user
+// @Description Retrieves a list of posts followed by the user
+// @ID get-posts-followed-by-user
+// @Param limit query int false "Limit the number of posts (default: 10)"
+// @Produce json
+// @Success 200 "with an array of Posts"
+// @Failure 400 {object} errorResponseBody
+// @Router /posts [get]
+func (apiCfg *ApiConfig) HandlerPostsFollowedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	limit := 10
 	limit_s := r.URL.Query().Get("limit")
 	if limit_s != "" {
@@ -29,5 +38,5 @@ func (apiCfg *apiConfig) handlerPostsFollowedByUser(w http.ResponseWriter, r *ht
 		return
 	}
 
-	respondWithJSON(w, http.StatusGone, dbPostsFollowedToPostsFollowed(postsFollowed))
+	respondWithJSON(w, http.StatusOK, dbPostsFollowedToPostsFollowed(postsFollowed))
 }

@@ -11,41 +11,34 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/keshavsharma98/Blog-Aggregator/docs"
+	"github.com/keshavsharma98/Blog-Aggregator/handler"
 	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
+	"github.com/keshavsharma98/Blog-Aggregator/internal/scrapper"
 	_ "github.com/lib/pq"
+	"github.com/swaggo/http-swagger"
 )
 
-type apiConfig struct {
-	DB *database.Queries
-}
+// @title Orders API
+// @version 1.0
+// @description This is a sample service for managing orders
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email soberkoder@gmail.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /v1
 
 func main() {
 	godotenv.Load(".env")
-	var (
-		dbURL string
-		port  string
-	)
-
-	port = os.Getenv("PORT")
+	var port = os.Getenv("PORT")
 	if port == "" {
 		log.Panicln("Port not found")
 	}
 
-	dbURL = os.Getenv("POSTGRES_URL")
-	if dbURL == "" {
-		log.Panicln("Database URL not found")
-	}
-
-	conn, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Panicln("Error connecting to database ", err)
-	}
-
-	defer conn.Close()
-
-	queries := database.New(conn)
-
-	apiCfg := apiConfig{
+	queries, conn := newDB()
+	apiCfg := handler.ApiConfig{
 		DB: queries,
 	}
 
@@ -60,24 +53,45 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	v1_Router := chi.NewRouter()
-	chi_router.Get("/readiness", apiCfg.handleReadiness)
-	v1_Router.Post("/users", apiCfg.handleCreateUser)
-	v1_Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handleGetUserByApiKey))
-	v1_Router.Post("/feed", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
-	v1_Router.Get("/feed", apiCfg.handlerGetAllFeeds)
-	v1_Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
-	v1_Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
-	v1_Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedsFollowedByUser))
-	v1_Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerPostsFollowedByUser))
+	chi_router.Get("/readiness", apiCfg.HandlerReadiness)
 
+	v1_Router := getV1Routes(&apiCfg)
 	chi_router.Mount("/v1", v1_Router)
+
+	chi_router.Route("/swagger", func(r chi.Router) {
+		r.Get("/*", httpSwagger.WrapHandler)
+	})
 
 	server := &http.Server{
 		Addr:    ":" + port,
 		Handler: chi_router,
 	}
 
+	scrappingOfFeeds(conn)
+	defer conn.Close()
+
+	log.Printf("Server is running on port %v\n", port)
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
+}
+
+func newDB() (*database.Queries, *sql.DB) {
+	var dbURL = os.Getenv("POSTGRES_URL")
+	if dbURL == "" {
+		log.Panicln("Database URL not found")
+	}
+
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Panicln("Error connecting to database ", err)
+	}
+
+	queries := database.New(conn)
+	return queries, conn
+}
+
+func scrappingOfFeeds(conn *sql.DB) {
 	db := database.New(conn)
 	concurrency_s := os.Getenv("CONCURRENCY")
 	if concurrency_s == "" {
@@ -97,10 +111,9 @@ func main() {
 		log.Panicln("Error: ", err)
 	}
 
-	rssScraper(db, concurrency, duration)
-
-	log.Printf("Server is running on port %v\n", port)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Error starting server: %v\n", err)
+	runScrapping := os.Getenv("RUN_SCRAPPING")
+	if runScrapping == "" || runScrapping == "true" {
+		scrapper.RssScraper(db, concurrency, duration)
 	}
+
 }

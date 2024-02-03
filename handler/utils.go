@@ -1,10 +1,16 @@
-package main
+package handler
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/keshavsharma98/Blog-Aggregator/internal/database"
 )
+
+type ApiConfig struct {
+	DB *database.Queries
+}
 
 type errorResponseBody struct {
 	Error string `json:"error"`
